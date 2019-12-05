@@ -1,15 +1,47 @@
 import unittest
-import wikidump
+import wikidump as wd
+import shutil
+import filecmp
+import os
+
+def myTextProcessor(text):
+    return text
 
 class TestWikiDump(unittest.TestCase):
 
+    tmpdir = "tmp"
+
+    def __init__(self, *args, **kwargs):
+        super(TestWikiDump, self).__init__(*args, **kwargs)
+
+        if not os.path.isdir(self.tmpdir):
+            os.makedirs(self.tmpdir)
+        #self.addCleanup(self.clean)
+
+    @classmethod
+    def tearDownClass(self):
+        shutil.rmtree(self.tmpdir);
+        pass
 
     def test_read_bz2(self):
-        s = 'hello world'
-        self.assertEqual(s.split(), ['hello', 'world'])
-        # check that s.split fails when the separator is not a string
-        with self.assertRaises(TypeError):
-            s.split(2)
+        #articles = ["Afghanistan", "Argentina", "Belgium", "Belize", "Bolivia", "Brazil", "Canada", "Chile", "China", "Colombia", "France", "India", "Japan", "South_Korea", "Mexico", "Peru", "Russia", "Slovakia", "Spain", "United_Kingdom", "United_States", "Venezuela", "Vietnam"]
+        #articles = ["Mercury_(planet)", "Venus", "Earth", "Mars"]
+        #articles = ["Afghanistan", "Argentina", "Belgium", "Belize", "Bolivia", "Brazil", "Canada", "Chile", "China", "Colombia", "France", "India", "Japan", "South_Korea", "Mexico", "Peru", "Russia", "Slovakia", "Spain", "United_Kingdom", "United_States", "Venezuela", "Vietnam", "Mercury_(planet)", "Venus", "Earth", "Mars"]
+        articles = ["Anarchism", "Test_3"]
+        #wd.processdump(r'C:\Users\rdsanchez\Code\wiki-ie\data\enwiki-20191120-pages-articles-multistream.xml.bz2', r'\output\test', articles)
+        wd.processdump(r'C:\Users\rdsanchez\Code\wiki-ie\data\test.xml.bz2', articles, outputfile="myfile.xml", multipleFiles=True, compression='bz2', outputType="xml", textProcessor=myTextProcessor)
+
+    def test_write_onefile_xml(self):
+        articles = ["Anarchism", "Test_3"]
+        wd.processdump(r'data/test.xml.bz2', articles, outputfile=r"tmp/test_write_onefile_xml.xml")
+        self.assertTrue(filecmp.cmp(r"data/results/test_write_onefile_xml.xml",r"tmp/test_write_onefile_xml.xml"), 'Test failed')
+
+    def test_defaults(self):      
+        wd.processdump(r'data/test.xml.bz2')
+        self.assertTrue(filecmp.cmp(r"data/results/output.xml",r"tmp/output.xml"), 'Test failed')
+
+    def test_write_multifile_xml(self):
+        pass
 
 if __name__ == '__main__':
     unittest.main()
