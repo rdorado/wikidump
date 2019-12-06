@@ -14,17 +14,18 @@ def processArticle(string):
     root = ET.fromstring(string)
     name = root.find("title")
 
-def processdump(filename, titles, outputfile="output.xml", outputdirectory=".", multipleFiles=True, compression=None, outputType="xml", textProcessor=None):
+def processdump(filename, titles=None, outputfile="output.xml", outputdirectory=".", multipleFiles=False, compression=None, outputType="xml", textProcessor=None):
     input = fileinput.FileInput(filename, openhook=fileinput.hook_compressed)
 
     article = None
     readArticle=False
     data = ""
+    WRITE_XML_SINGLE_FILE = False
 
     if not os.path.isdir(outputdirectory):
         os.makedirs(outputdirectory)
 
-    if not multipleFiles and outputType not None and outputType.lower() == "xml":
+    if not multipleFiles and outputType is not None and outputType.lower() == "xml":
         WRITE_XML_SINGLE_FILE = True
 
     if WRITE_XML_SINGLE_FILE:
@@ -53,7 +54,7 @@ def processdump(filename, titles, outputfile="output.xml", outputdirectory=".", 
         else:
             articleBuffer += line.rstrip()+"\n"
             article = Article(articleBuffer)
-            if article.title in titles:
+            if titles == None or article.title in titles:
                 with open(outputfile, "a") as output:
                     output.write(article.text)
             readArticle = False
