@@ -6,9 +6,13 @@ import os
 class Article:
 
     def __init__(self, string):
-        self.text = string
+        self.raw = string
         self.xml = ET.fromstring(string)
         self.title = self.xml.find("title").text
+        self.text = self.xml.find("revision/text").text
+
+    def getAsString(self, textProcessor=None):
+        return self.title
 
 def processArticle(string):
     root = ET.fromstring(string)
@@ -20,15 +24,22 @@ def processdump(filename, titles=None, outputfile="output.xml", outputdirectory=
     article = None
     readArticle=False
     data = ""
-    WRITE_XML_SINGLE_FILE = False
+    WRITE_XML_SINGLEFILE = False
+    WRITE_TEXT_MULTIFILE = False
 
     if not os.path.isdir(outputdirectory):
         os.makedirs(outputdirectory)
 
-    if not multipleFiles and outputType is not None and outputType.lower() == "xml":
-        WRITE_XML_SINGLE_FILE = True
+    if not multipleFiles:
+        if outputType is None or outputType.lower() == "xml":
+            WRITE_XML_SINGLEFILE = True
+    else:
+        if outputType is None or outputType.lower() == "xml":
+            WRITE_XML_MULTIFILE = True
+        elif outputType.lower() == "text":
+            WRITE_TEXT_MULTIFILE = True
 
-    if WRITE_XML_SINGLE_FILE:
+    if WRITE_XML_SINGLEFILE:
         with open(outputfile, "w") as output:
             output.write('<mediawiki xmlns="http://www.mediawiki.org/xml/export-0.10/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mediawiki.org/xml/export-0.10/ http://www.mediawiki.org/xml/export-0.10.xsd" version="0.10" xml:lang="en">\n')
 
@@ -54,13 +65,21 @@ def processdump(filename, titles=None, outputfile="output.xml", outputdirectory=
         else:
             articleBuffer += line.rstrip()+"\n"
             article = Article(articleBuffer)
-            if titles == None or article.title in titles:
-                with open(outputfile, "a") as output:
-                    output.write(article.text)
+            if WRITE_XML_SINGLEFILE:
+                if titles == None or article.title in titles:
+                    with open(outputfile, "a") as output:
+                        output.write(article.raw)
+            elif WRITE_TEXT_MULTIFILE:
+                if titles == None or article.title in titles:
+                    with open(outputdirectory+"/"+article.title+".txt", "w") as output:
+                        if textProcessor is not None and callable(textProcessor):
+                            output.write(textProcessor(article.text))
+                        else:
+                            output.write(article.text)
             readArticle = False
             articleBuffer = ""
 
-    if WRITE_XML_SINGLE_FILE:
+    if WRITE_XML_SINGLEFILE:
         with open(outputfile, "a") as output:
             output.write("</mediawiki>")
 

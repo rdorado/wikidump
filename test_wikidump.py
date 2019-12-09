@@ -5,7 +5,11 @@ import filecmp
 import os
 
 def myTextProcessor(text):
-    return text
+    resp = ""
+    splits = text.split("\n")
+    for split in splits:
+        resp += split.strip()+"\n"
+    return resp
 
 class TestWikiDump(unittest.TestCase):
 
@@ -32,13 +36,22 @@ class TestWikiDump(unittest.TestCase):
         wd.processdump(r'data/test.xml.bz2', articles, outputfile=r"tmp/test_write_onefile_xml.xml")
         self.assertTrue(filecmp.cmp(r"data/results/test_write_onefile_xml.xml",r"tmp/test_write_onefile_xml.xml"), 'Test failed')
 
-    def test_write_multifile_xml(self):
+    def test_write_onefile_xml_compressed(self):
         articles = ["Anarchism", "Test_3"]
-        #wd.processdump(r'data/test.xml.bz2', multiFiles=True, outputdur="tmp/test_write_multifile_xml")
+        wd.processdump(r'data/test.xml.bz2', articles, outputfile=r"tmp/test_write_onefile_xml.xml", compression='bz2')
+        self.assertTrue(filecmp.cmp(r"data/results/test_write_onefile_xml.xml",r"tmp/test_write_onefile_xml.xml"), 'Test failed')
+
+    def test_write_multifile_text(self):
+        articles = ["Anarchism", "Test_3"]
+        wd.processdump(r'data/test.xml.bz2', multipleFiles=True, outputdirectory="tmp/test_write_multifile_text", outputType="text")
+
+    def test_write_multifile_textprocessor(self):
+        articles = ["Anarchism", "Test_3"]
+        wd.processdump(r'data/test.xml.bz2', multipleFiles=True, outputdirectory="tmp/test_write_multifile_textprocessor", outputType="text",  textProcessor=myTextProcessor )
 
     def test_write_multifile_xml(self):
         articles = ["Anarchism", "Test_3"]
-        #wd.processdump(r'data/test.xml.bz2', multiFiles=True, outputdur="tmp/test_write_multifile_xml")
+        #wd.processdump(r'data/test.xml.bz2', multiFiles=True, outputdirectory="tmp/test_write_multifile_xml")
 
     def test_read_bz2(self):
         #articles = ["Afghanistan", "Argentina", "Belgium", "Belize", "Bolivia", "Brazil", "Canada", "Chile", "China", "Colombia", "France", "India", "Japan", "South_Korea", "Mexico", "Peru", "Russia", "Slovakia", "Spain", "United_Kingdom", "United_States", "Venezuela", "Vietnam"]
